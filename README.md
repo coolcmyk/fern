@@ -58,12 +58,13 @@ source ~/.zshrc
 Keep that file private and never commit it to a repository. Fern also supports
 `RUNPOD_ACCOUNT_API_KEY`, which takes precedence when both variables are set.
 
-The current CLI provides read-only Runpod discovery:
+The current CLI provides Runpod discovery and a reversible stop operation:
 
 ```bash
 fern config check
 fern pod list --compute cpu
 fern pod get <pod-id>
+fern pod stop <pod-id>
 ```
 
 Fern never prints either credential.
@@ -95,6 +96,8 @@ The smoke test writes `smoke.log` and `smoke.exit` under
 `/workspace/fern/drone-sim`. The Runpod experiment forces Fast DDS to UDP
 because Pods do not provide Docker's `--shm-size=2g` setting. Treat this as an
 experimental compatibility path until its five-minute acceptance run passes.
+The image requests that Runpod stop its own Pod after recording the result so a
+failed smoke test cannot enter a billable restart loop.
 
 ## Develop
 

@@ -66,4 +66,5 @@ pub trait Provider: Send + Sync {
     async fn list(&self, compute: Option<ComputeKind>) -> Result<Vec<Deployment>>;
     async fn get(&self, id: &str) -> Result<Deployment>;
     async fn create(&self, spec: DeploymentSpec) -> Result<Deployment>;
+    async fn stop(&self, id: &str) -> Result<Deployment>;
 }

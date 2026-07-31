@@ -83,6 +83,11 @@ enum PodCommand {
         /// Runpod Pod ID.
         id: String,
     },
+    /// Stop a running Pod while retaining its persistent volume.
+    Stop {
+        /// Runpod Pod ID.
+        id: String,
+    },
 }
 
 #[derive(Clone, Copy, Debug, ValueEnum)]
@@ -164,6 +169,10 @@ async fn run(cli: Cli) -> Result<()> {
                 }
                 PodCommand::Get { id } => {
                     let pod = provider.get(&id).await?;
+                    print_json(&pod);
+                }
+                PodCommand::Stop { id } => {
+                    let pod = provider.stop(&id).await?;
                     print_json(&pod);
                 }
             }

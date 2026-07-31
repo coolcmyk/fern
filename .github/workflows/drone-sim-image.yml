@@ -9,6 +9,7 @@ permissions:
 
 env:
   DRONE_SIM_SHA: edc89943ca5a498d05d81b4dd65b2fa3e47073e2
+  IMAGE_REVISION: fern.1
 
 jobs:
   publish:
@@ -36,20 +37,24 @@ jobs:
         shell: bash
         run: |
           owner="${GITHUB_REPOSITORY_OWNER,,}"
-          base_image="fern-drone-sim-lane-a-base:${DRONE_SIM_SHA}"
           published_image="ghcr.io/${owner}/fern-drone-sim-lane-a"
+          base_image="${published_image}:${DRONE_SIM_SHA}"
+          revision_image="${published_image}:${DRONE_SIM_SHA}-${IMAGE_REVISION}"
 
-          docker build \
-            --file upstream/docker/lane-a.Dockerfile \
-            --tag "${base_image}" \
-            upstream
+          if ! docker pull "${base_image}"; then
+            docker build \
+              --file upstream/docker/lane-a.Dockerfile \
+              --tag "${base_image}" \
+              upstream
+            docker push "${base_image}"
+          fi
 
           docker build \
             --file images/drone-sim-lane-a.Dockerfile \
             --build-arg "BASE_IMAGE=${base_image}" \
-            --tag "${published_image}:${DRONE_SIM_SHA}" \
+            --tag "${revision_image}" \
             --tag "${published_image}:lane-a-v1.16.0" \
             upstream
 
-          docker push "${published_image}:${DRONE_SIM_SHA}"
+          docker push "${revision_image}"
           docker push "${published_image}:lane-a-v1.16.0"
