@@ -9,7 +9,7 @@ permissions:
 
 env:
   DRONE_SIM_SHA: edc89943ca5a498d05d81b4dd65b2fa3e47073e2
-  IMAGE_REVISION: fern.1
+  IMAGE_REVISION: fern.2
 
 jobs:
   publish:
@@ -54,7 +54,7 @@ jobs:
             --build-arg "BASE_IMAGE=${base_image}" \
             --tag "${revision_image}" \
             --tag "${published_image}:lane-a-v1.16.0" \
-            upstream
+            .
 
           docker push "${revision_image}"
           docker push "${published_image}:lane-a-v1.16.0"

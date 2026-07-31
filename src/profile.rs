@@ -4,7 +4,7 @@ use crate::provider::{ComputeKind, DeploymentSpec};
 
 pub const DRONE_SIM_UPSTREAM_SHA: &str = "edc89943ca5a498d05d81b4dd65b2fa3e47073e2";
 pub const DRONE_SIM_IMAGE: &str =
-    "ghcr.io/coolcmyk/fern-drone-sim-lane-a:edc89943ca5a498d05d81b4dd65b2fa3e47073e2-fern.1";
+    "ghcr.io/coolcmyk/fern-drone-sim-lane-a:edc89943ca5a498d05d81b4dd65b2fa3e47073e2-fern.2";
 
 pub fn drone_sim_lane_a(image: Option<String>, duration_seconds: u32) -> DeploymentSpec {
     DeploymentSpec {
