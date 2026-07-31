@@ -9,7 +9,7 @@ permissions:
 
 env:
   DRONE_SIM_SHA: edc89943ca5a498d05d81b4dd65b2fa3e47073e2
-  IMAGE_REVISION: fern.2
+  IMAGE_REVISION: fern.3
 
 jobs:
   publish:
