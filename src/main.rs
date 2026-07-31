@@ -1,0 +1,121 @@
+use clap::{Args, Parser, Subcommand, ValueEnum};
+use fern::{
+    Config, Result,
+    provider::{ComputeKind, Provider, runpod::RunpodClient},
+};
+
+#[derive(Debug, Parser)]
+#[command(name = "fern", version, about)]
+struct Cli {
+    #[command(subcommand)]
+    command: Command,
+}
+
+#[derive(Debug, Subcommand)]
+enum Command {
+    /// Validate Fern's local configuration without printing secrets.
+    Config(ConfigArgs),
+    /// Inspect Runpod Pods.
+    Pod(PodArgs),
+}
+
+#[derive(Debug, Args)]
+struct ConfigArgs {
+    #[command(subcommand)]
+    command: ConfigCommand,
+}
+
+#[derive(Debug, Subcommand)]
+enum ConfigCommand {
+    /// Check credential resolution and the Runpod API endpoint.
+    Check,
+}
+
+#[derive(Debug, Args)]
+struct PodArgs {
+    #[command(subcommand)]
+    command: PodCommand,
+}
+
+#[derive(Debug, Subcommand)]
+enum PodCommand {
+    /// List Pods visible to the configured account.
+    List {
+        /// Restrict results to CPU or GPU Pods.
+        #[arg(long, value_enum)]
+        compute: Option<ComputeArg>,
+    },
+    /// Get one Pod by provider ID.
+    Get {
+        /// Runpod Pod ID.
+        id: String,
+    },
+}
+
+#[derive(Clone, Copy, Debug, ValueEnum)]
+enum ComputeArg {
+    Cpu,
+    Gpu,
+}
+
+impl From<ComputeArg> for ComputeKind {
+    fn from(value: ComputeArg) -> Self {
+        match value {
+            ComputeArg::Cpu => Self::Cpu,
+            ComputeArg::Gpu => Self::Gpu,
+        }
+    }
+}
+
+#[tokio::main]
+async fn main() {
+    // Existing process variables retain precedence over project-local values.
+    // Missing .env files are valid for installed binaries.
+    let _ = dotenvy::dotenv();
+
+    if let Err(error) = run(Cli::parse()).await {
+        eprintln!("error: {error}");
+        std::process::exit(1);
+    }
+}
+
+async fn run(cli: Cli) -> Result<()> {
+    match cli.command {
+        Command::Config(args) => match args.command {
+            ConfigCommand::Check => {
+                let config = Config::from_env()?;
+                print_json(&serde_json::json!({
+                    "ok": true,
+                    "provider": "runpod",
+                    "api_base": config.runpod_api_base().as_str(),
+                    "credential_source": config.credential_source(),
+                }));
+            }
+        },
+        Command::Pod(args) => {
+            let config = Config::from_env()?;
+            let provider =
+                RunpodClient::new(config.runpod_api_base().clone(), config.runpod_api_key())?;
+
+            match args.command {
+                PodCommand::List { compute } => {
+                    let pods = provider.list(compute.map(ComputeKind::from)).await?;
+                    print_json(&pods);
+                }
+                PodCommand::Get { id } => {
+                    let pod = provider.get(&id).await?;
+                    print_json(&pod);
+                }
+            }
+        }
+    }
+
+    Ok(())
+}
+
+fn print_json(value: &impl serde::Serialize) {
+    println!(
+        "{}",
+        serde_json::to_string_pretty(value).expect("Fern output must serialize")
+    );
+}
