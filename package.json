@@ -1,0 +1,16 @@
+{
+  "name": "fern-workspace",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "bun@1.3.10",
+  "workspaces": [
+    "npm/*"
+  ],
+  "scripts": {
+    "build": "cargo build --release",
+    "check": "cargo fmt --all --check && cargo clippy --all-targets -- -D warnings",
+    "test": "cargo test --all-targets && bun run test:package",
+    "test:package": "bun scripts/test-package.ts",
+    "package:version": "bun scripts/set-package-version.ts"
+  }
+}

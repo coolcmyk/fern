@@ -1,0 +1,126 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build ${{ matrix.target }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            runner: ubuntu-24.04
+            package: fern-linux-x64
+            binary: fern
+          - target: aarch64-unknown-linux-gnu
+            runner: ubuntu-24.04-arm
+            package: fern-linux-arm64
+            binary: fern
+          - target: x86_64-apple-darwin
+            runner: macos-15-intel
+            package: fern-darwin-x64
+            binary: fern
+          - target: aarch64-apple-darwin
+            runner: macos-15
+            package: fern-darwin-arm64
+            binary: fern
+          - target: x86_64-pc-windows-msvc
+            runner: windows-2025
+            package: fern-win32-x64
+            binary: fern.exe
+
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - run: cargo build --release --locked --target ${{ matrix.target }}
+
+      - name: Stage Unix binary
+        if: runner.os != 'Windows'
+        run: |
+          install -m 755 \
+            target/${{ matrix.target }}/release/${{ matrix.binary }} \
+            npm/${{ matrix.package }}/bin/${{ matrix.binary }}
+
+      - name: Stage Windows binary
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Copy-Item `
+            "target/${{ matrix.target }}/release/${{ matrix.binary }}" `
+            "npm/${{ matrix.package }}/bin/${{ matrix.binary }}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.package }}
+          path: npm/${{ matrix.package }}/bin/${{ matrix.binary }}
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    name: Publish npm packages
+    needs: build
+    runs-on: ubuntu-24.04
+    environment: npm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.10
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: fern-linux-x64
+          path: npm/fern-linux-x64/bin
+      - uses: actions/download-artifact@v4
+        with:
+          name: fern-linux-arm64
+          path: npm/fern-linux-arm64/bin
+      - uses: actions/download-artifact@v4
+        with:
+          name: fern-darwin-x64
+          path: npm/fern-darwin-x64/bin
+      - uses: actions/download-artifact@v4
+        with:
+          name: fern-darwin-arm64
+          path: npm/fern-darwin-arm64/bin
+      - uses: actions/download-artifact@v4
+        with:
+          name: fern-win32-x64
+          path: npm/fern-win32-x64/bin
+
+      - name: Prepare packages
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          chmod +x npm/fern-*/bin/fern 2>/dev/null || true
+          bun scripts/set-package-version.ts "$version"
+          bun scripts/verify-release-packages.ts "$version"
+
+      - name: Publish platform packages
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          bun publish --cwd npm/fern-linux-x64 --access public
+          bun publish --cwd npm/fern-linux-arm64 --access public
+          bun publish --cwd npm/fern-darwin-x64 --access public
+          bun publish --cwd npm/fern-darwin-arm64 --access public
+          bun publish --cwd npm/fern-win32-x64 --access public
+
+      - name: Publish launcher
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: bun publish --cwd npm/fern --access public

@@ -1,0 +1,56 @@
+{
+  "lockfileVersion": 1,
+  "configVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "fern-workspace",
+    },
+    "npm/fern": {
+      "name": "@coolcmyk/fern",
+      "version": "0.1.0",
+      "bin": {
+        "fern": "bin/fern.js",
+      },
+      "optionalDependencies": {
+        "@coolcmyk/fern-darwin-arm64": "0.1.0",
+        "@coolcmyk/fern-darwin-x64": "0.1.0",
+        "@coolcmyk/fern-linux-arm64": "0.1.0",
+        "@coolcmyk/fern-linux-x64": "0.1.0",
+        "@coolcmyk/fern-win32-x64": "0.1.0",
+      },
+    },
+    "npm/fern-darwin-arm64": {
+      "name": "@coolcmyk/fern-darwin-arm64",
+      "version": "0.1.0",
+    },
+    "npm/fern-darwin-x64": {
+      "name": "@coolcmyk/fern-darwin-x64",
+      "version": "0.1.0",
+    },
+    "npm/fern-linux-arm64": {
+      "name": "@coolcmyk/fern-linux-arm64",
+      "version": "0.1.0",
+    },
+    "npm/fern-linux-x64": {
+      "name": "@coolcmyk/fern-linux-x64",
+      "version": "0.1.0",
+    },
+    "npm/fern-win32-x64": {
+      "name": "@coolcmyk/fern-win32-x64",
+      "version": "0.1.0",
+    },
+  },
+  "packages": {
+    "@coolcmyk/fern": ["@coolcmyk/fern@workspace:npm/fern"],
+
+    "@coolcmyk/fern-darwin-arm64": ["@coolcmyk/fern-darwin-arm64@workspace:npm/fern-darwin-arm64"],
+
+    "@coolcmyk/fern-darwin-x64": ["@coolcmyk/fern-darwin-x64@workspace:npm/fern-darwin-x64"],
+
+    "@coolcmyk/fern-linux-arm64": ["@coolcmyk/fern-linux-arm64@workspace:npm/fern-linux-arm64"],
+
+    "@coolcmyk/fern-linux-x64": ["@coolcmyk/fern-linux-x64@workspace:npm/fern-linux-x64"],
+
+    "@coolcmyk/fern-win32-x64": ["@coolcmyk/fern-win32-x64@workspace:npm/fern-win32-x64"],
+  }
+}
