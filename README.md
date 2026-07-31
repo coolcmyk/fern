@@ -14,14 +14,14 @@ skip the compute factor, run your robotics sim out in the cloud
 
 Install the native Fern CLI through Bun:
 
-```console
+```bash
 bun install --global @coolcmyk/fern
 fern --help
 ```
 
 Or run a temporary cached copy:
 
-```console
+```bash
 bunx @coolcmyk/fern --help
 ```
 
@@ -35,27 +35,49 @@ Fern is in its initial scaffold phase. Its first target is Drone Sim Lane A on
 Runpod Pods. See [the implementation plan](docs/PLAN.md) for the architecture,
 constraints, milestones, and acceptance gates.
 
-The current CLI provides read-only Runpod discovery:
+## Configure Runpod
 
-```console
-RUNPOD_API_KEY=... fern config check
-RUNPOD_API_KEY=... fern pod list --compute cpu
-RUNPOD_API_KEY=... fern pod get <pod-id>
+Set the API key once in your shell startup file so every Fern invocation can
+use it. Add this line to `~/.bashrc` when using Bash or `~/.zshrc` when using
+Zsh:
+
+```bash
+export RUNPOD_API_KEY="your-runpod-api-key"
 ```
 
-`RUNPOD_ACCOUNT_API_KEY` takes precedence when both credential variables are
-set. Fern never prints either credential.
+Reload the matching shell configuration:
+
+```bash
+# Bash
+source ~/.bashrc
+
+# Zsh
+source ~/.zshrc
+```
+
+Keep that file private and never commit it to a repository. Fern also supports
+`RUNPOD_ACCOUNT_API_KEY`, which takes precedence when both variables are set.
+
+The current CLI provides read-only Runpod discovery:
+
+```bash
+fern config check
+fern pod list --compute cpu
+fern pod get <pod-id>
+```
+
+Fern never prints either credential.
 
 ## Develop
 
-```console
+```bash
 bun install
 bun run test
 ```
 
 Rust-only checks remain available through Cargo:
 
-```console
+```bash
 cargo test --all-targets
 cargo clippy --all-targets -- -D warnings
 ```
