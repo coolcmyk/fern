@@ -1,0 +1,55 @@
+name: Drone Sim image
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  DRONE_SIM_SHA: edc89943ca5a498d05d81b4dd65b2fa3e47073e2
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Check out Fern
+        uses: actions/checkout@v4
+
+      - name: Check out pinned Drone Sim
+        uses: actions/checkout@v4
+        with:
+          repository: teapotlaboratories/drone-sim
+          ref: ${{ env.DRONE_SIM_SHA }}
+          path: upstream
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and publish the Runpod image
+        shell: bash
+        run: |
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          base_image="fern-drone-sim-lane-a-base:${DRONE_SIM_SHA}"
+          published_image="ghcr.io/${owner}/fern-drone-sim-lane-a"
+
+          docker build \
+            --file upstream/docker/lane-a.Dockerfile \
+            --tag "${base_image}" \
+            upstream
+
+          docker build \
+            --file images/drone-sim-lane-a.Dockerfile \
+            --build-arg "BASE_IMAGE=${base_image}" \
+            --tag "${published_image}:${DRONE_SIM_SHA}" \
+            --tag "${published_image}:lane-a-v1.16.0" \
+            upstream
+
+          docker push "${published_image}:${DRONE_SIM_SHA}"
+          docker push "${published_image}:lane-a-v1.16.0"

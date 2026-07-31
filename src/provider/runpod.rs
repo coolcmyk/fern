@@ -75,6 +75,18 @@ impl Provider for RunpodClient {
         .await?;
         Ok(pod.into())
     }
+
+    async fn create(&self, spec: DeploymentSpec) -> Result<Deployment> {
+        let pod: RunpodPod = Self::parse_response(
+            self.http
+                .post(self.endpoint("pods")?)
+                .json(&CreatePodRequest::from(spec))
+                .send()
+                .await?,
+        )
+        .await?;
+        Ok(pod.into())
+    }
 }
 
 #[derive(Clone, Debug, Serialize, PartialEq, Eq)]

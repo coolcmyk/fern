@@ -1,7 +1,10 @@
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use fern::{
-    Config, Result,
-    provider::{ComputeKind, Provider, runpod::RunpodClient},
+    Config, Error, Result, profile,
+    provider::{
+        ComputeKind, Provider,
+        runpod::{CreatePodRequest, RunpodClient},
+    },
 };
 
 #[derive(Debug, Parser)]
@@ -15,8 +18,38 @@ struct Cli {
 enum Command {
     /// Validate Fern's local configuration without printing secrets.
     Config(ConfigArgs),
+    /// Create a workload from a built-in deployment profile.
+    Deploy(DeployArgs),
     /// Inspect Runpod Pods.
     Pod(PodArgs),
+}
+
+#[derive(Debug, Args)]
+struct DeployArgs {
+    /// Built-in workload profile.
+    #[arg(long, value_enum, default_value = "drone-sim-lane-a")]
+    profile: ProfileArg,
+
+    /// Override the profile's container image.
+    #[arg(long)]
+    image: Option<String>,
+
+    /// Smoke-test duration in seconds.
+    #[arg(long, default_value_t = 300)]
+    duration: u32,
+
+    /// Print the Runpod request without creating a Pod.
+    #[arg(long, conflicts_with = "yes")]
+    dry_run: bool,
+
+    /// Confirm creation of a billable Runpod Pod.
+    #[arg(long, conflicts_with = "dry_run")]
+    yes: bool,
+}
+
+#[derive(Clone, Copy, Debug, ValueEnum)]
+enum ProfileArg {
+    DroneSimLaneA,
 }
 
 #[derive(Debug, Args)]
@@ -92,6 +125,33 @@ async fn run(cli: Cli) -> Result<()> {
                 }));
             }
         },
+        Command::Deploy(args) => {
+            if args.duration == 0 {
+                return Err(Error::Config("--duration must be at least 1 second".into()));
+            }
+
+            let spec = match args.profile {
+                ProfileArg::DroneSimLaneA => profile::drone_sim_lane_a(args.image, args.duration),
+            };
+
+            if args.dry_run {
+                print_json(&CreatePodRequest::from(spec));
+                return Ok(());
+            }
+
+            if !args.yes {
+                return Err(Error::Config(
+                    "deploy creates a billable Pod; inspect with --dry-run or confirm with --yes"
+                        .into(),
+                ));
+            }
+
+            let config = Config::from_env()?;
+            let provider =
+                RunpodClient::new(config.runpod_api_base().clone(), config.runpod_api_key())?;
+            let pod = provider.create(spec).await?;
+            print_json(&pod);
+        }
         Command::Pod(args) => {
             let config = Config::from_env()?;
             let provider =

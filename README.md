@@ -68,6 +68,34 @@ fern pod get <pod-id>
 
 Fern never prints either credential.
 
+For a project-local setup instead, put the credential in an ignored `.env`
+file at the repository root:
+
+```bash
+RUNPOD_API_KEY=your-runpod-api-key
+```
+
+## Try Drone Sim
+
+The experimental Lane A profile targets CPU compute and pins the exact upstream
+Drone Sim revision used by Fern. Inspect the billable Runpod request first:
+
+```bash
+fern deploy --profile drone-sim-lane-a --dry-run
+```
+
+After the `Drone Sim image` GitHub workflow has published the pinned image,
+explicitly confirm Pod creation:
+
+```bash
+fern deploy --profile drone-sim-lane-a --yes
+```
+
+The smoke test writes `smoke.log` and `smoke.exit` under
+`/workspace/fern/drone-sim`. The Runpod experiment forces Fast DDS to UDP
+because Pods do not provide Docker's `--shm-size=2g` setting. Treat this as an
+experimental compatibility path until its five-minute acceptance run passes.
+
 ## Develop
 
 ```bash

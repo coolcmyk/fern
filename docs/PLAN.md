@@ -284,7 +284,7 @@ Suggested run directory:
 - [x] Create a Rust package and provider boundary.
 - [x] Add credential resolution without persisting secrets.
 - [x] Add typed, read-only Runpod `list` and `get` operations.
-- [ ] Validate the read-only client against a real account.
+- [x] Validate the read-only client against a real account.
 
 Acceptance gate:
 
@@ -298,8 +298,9 @@ The command returns JSON by default and never prints the credential.
 ### Phase 1 — safe Pod lifecycle
 
 - Add manifest parsing and validation.
-- Add create request generation and `--dry-run` output.
-- Add `deploy`, `start`, `stop`, and guarded `destroy`.
+- [x] Add create request generation and `--dry-run` output.
+- [x] Add guarded `deploy` with explicit billable-operation confirmation.
+- Add `start`, `stop`, and guarded `destroy`.
 - Record a local deployment index using atomic writes.
 - Add wait loops with deadlines and actionable provider errors.
 - Add ordered GPU type fallback for capacity errors.
