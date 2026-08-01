@@ -176,17 +176,19 @@ Proposed project manifest:
 [project]
 name = "drone-sim"
 
-[profiles.drone-sim-lane-a]
+[profiles.drone-sim-stack]
 provider = "runpod"
-image = "ghcr.io/teapotlaboratories/drone-sim:lane-a-v1.16.0"
-compute = "cpu"
+image = "ghcr.io/teapotlaboratories/drone-sim:stack-main"
+compute = "gpu"
+gpu_count = 1
+gpu_type_ids = ["NVIDIA RTX 2000 Ada Generation"]
 container_disk_gb = 40
 volume_gb = 20
 volume_mount_path = "/workspace"
-ports = ["22/tcp", "8080/http"]
+ports = []
 
-[profiles.drone-sim-lane-a.env]
-FERN_PROFILE = "lane-a"
+[profiles.drone-sim-stack.env]
+FERN_PROFILE = "drone-sim-stack"
 FERN_WORKSPACE = "/workspace"
 ```
 

@@ -49,6 +49,7 @@ pub struct Deployment {
 pub struct DeploymentSpec {
     pub name: String,
     pub image: String,
+    pub container_registry_auth_id: Option<String>,
     pub compute: ComputeKind,
     pub container_disk_gb: u32,
     pub volume_gb: u32,

@@ -105,6 +105,8 @@ impl Provider for RunpodClient {
 pub struct CreatePodRequest {
     pub name: String,
     pub image_name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub container_registry_auth_id: Option<String>,
     pub compute_type: ComputeKind,
     pub container_disk_in_gb: u32,
     pub volume_in_gb: u32,
@@ -126,6 +128,7 @@ impl From<DeploymentSpec> for CreatePodRequest {
         Self {
             name: spec.name,
             image_name: spec.image,
+            container_registry_auth_id: spec.container_registry_auth_id,
             compute_type: spec.compute,
             container_disk_in_gb: spec.container_disk_gb,
             volume_in_gb: spec.volume_gb,
@@ -228,6 +231,7 @@ mod tests {
         let request = CreatePodRequest::from(DeploymentSpec {
             name: "fern-lane-a".into(),
             image: "ghcr.io/example/drone-sim:sha-123".into(),
+            container_registry_auth_id: Some("registry-auth-123".into()),
             compute: ComputeKind::Cpu,
             container_disk_gb: 40,
             volume_gb: 20,
@@ -242,6 +246,7 @@ mod tests {
 
         let value = serde_json::to_value(request).unwrap();
         assert_eq!(value["imageName"], "ghcr.io/example/drone-sim:sha-123");
+        assert_eq!(value["containerRegistryAuthId"], "registry-auth-123");
         assert_eq!(value["computeType"], "CPU");
         assert_eq!(value["containerDiskInGb"], 40);
         assert_eq!(value["vcpuCount"], 8);
