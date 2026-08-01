@@ -1,6 +1,6 @@
 {
   "name": "@coolcmyk/fern",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Run robotics simulations on cloud compute",
   "license": "MIT",
   "type": "module",
@@ -25,10 +25,10 @@
     "access": "public"
   },
   "optionalDependencies": {
-    "@coolcmyk/fern-linux-x64": "0.1.0",
-    "@coolcmyk/fern-linux-arm64": "0.1.0",
-    "@coolcmyk/fern-darwin-x64": "0.1.0",
-    "@coolcmyk/fern-darwin-arm64": "0.1.0",
-    "@coolcmyk/fern-win32-x64": "0.1.0"
+    "@coolcmyk/fern-linux-x64": "0.2.0",
+    "@coolcmyk/fern-linux-arm64": "0.2.0",
+    "@coolcmyk/fern-darwin-x64": "0.2.0",
+    "@coolcmyk/fern-darwin-arm64": "0.2.0",
+    "@coolcmyk/fern-win32-x64": "0.2.0"
   }
 }

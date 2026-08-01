@@ -1,3 +1,5 @@
+use std::env;
+
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use fern::{
     Config, Error, Result, profile,
@@ -27,12 +29,16 @@ enum Command {
 #[derive(Debug, Args)]
 struct DeployArgs {
     /// Built-in workload profile.
-    #[arg(long, value_enum, default_value = "drone-sim-lane-a")]
+    #[arg(long, value_enum, default_value = "drone-sim-stack")]
     profile: ProfileArg,
 
     /// Override the profile's container image.
     #[arg(long)]
     image: Option<String>,
+
+    /// Runpod container registry credential ID for a private image.
+    #[arg(long)]
+    registry_auth_id: Option<String>,
 
     /// Smoke-test duration in seconds.
     #[arg(long, default_value_t = 300)]
@@ -49,7 +55,8 @@ struct DeployArgs {
 
 #[derive(Clone, Copy, Debug, ValueEnum)]
 enum ProfileArg {
-    DroneSimLaneA,
+    #[value(alias = "drone-sim-lane-a")]
+    DroneSimStack,
 }
 
 #[derive(Debug, Args)]
@@ -135,8 +142,13 @@ async fn run(cli: Cli) -> Result<()> {
                 return Err(Error::Config("--duration must be at least 1 second".into()));
             }
 
+            let registry_auth_id = args
+                .registry_auth_id
+                .or_else(|| optional_env("RUNPOD_CONTAINER_REGISTRY_AUTH_ID"));
             let spec = match args.profile {
-                ProfileArg::DroneSimLaneA => profile::drone_sim_lane_a(args.image, args.duration),
+                ProfileArg::DroneSimStack => {
+                    profile::drone_sim_stack(args.image, args.duration, registry_auth_id)
+                }
             };
 
             if args.dry_run {
@@ -180,6 +192,13 @@ async fn run(cli: Cli) -> Result<()> {
     }
 
     Ok(())
+}
+
+fn optional_env(name: &str) -> Option<String> {
+    env::var(name)
+        .ok()
+        .map(|value| value.trim().to_owned())
+        .filter(|value| !value.is_empty())
 }
 
 fn print_json(value: &impl serde::Serialize) {

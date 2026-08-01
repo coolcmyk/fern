@@ -78,26 +78,39 @@ RUNPOD_API_KEY=your-runpod-api-key
 
 ## Try Drone Sim
 
-The experimental Lane A profile targets CPU compute and pins the exact upstream
-Drone Sim revision used by Fern. Inspect the billable Runpod request first:
+The Drone Sim stack profile targets CPU compute and deploys one OCI image that
+contains the PX4, Gazebo, XRCE-DDS, ROS 2, and headless QGroundControl processes
+represented by the upstream Compose stack. Runpod does not execute Docker
+Compose, so the image supervises those processes in one Pod and one network
+namespace.
+
+Inspect the billable Runpod request first:
 
 ```bash
-fern deploy --profile drone-sim-lane-a --dry-run
+fern deploy --profile drone-sim-stack --dry-run
 ```
 
-After the `Drone Sim image` GitHub workflow has published the pinned image,
-explicitly confirm Pod creation:
+Public GHCR packages need no registry credentials. For a private package, create
+a container-registry credential in Runpod and provide its ID—not the GHCR token—to
+Fern:
 
 ```bash
-fern deploy --profile drone-sim-lane-a --yes
+export RUNPOD_CONTAINER_REGISTRY_AUTH_ID="your-runpod-registry-auth-id"
 ```
 
-The smoke test writes `smoke.log` and `smoke.exit` under
-`/workspace/fern/drone-sim`. The Runpod experiment forces Fast DDS to UDP
-because Pods do not provide Docker's `--shm-size=2g` setting. Treat this as an
-experimental compatibility path until its five-minute acceptance run passes.
-The image requests that Runpod stop its own Pod after recording the result so a
-failed smoke test cannot enter a billable restart loop.
+After the `Drone Sim stack image` workflow publishes the image, explicitly
+confirm Pod creation. Prefer the immutable digest printed by the workflow:
+
+```bash
+fern deploy --profile drone-sim-stack \
+  --image ghcr.io/teapotlaboratories/drone-sim@sha256:<digest> \
+  --yes
+```
+
+Run artifacts are written under `/workspace/runs/<run-id>/`. The Runpod path
+forces Fast DDS to UDP because Pods do not provide Docker's `--shm-size=2g`
+setting. The image requests that Runpod stop its own Pod after recording the
+result so a failed run cannot enter a billable restart loop.
 
 ## Develop
 
