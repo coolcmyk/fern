@@ -179,7 +179,9 @@ name = "drone-sim"
 [profiles.drone-sim-stack]
 provider = "runpod"
 image = "ghcr.io/teapotlaboratories/drone-sim:stack-main"
-compute = "cpu"
+compute = "gpu"
+gpu_count = 1
+gpu_type_ids = ["NVIDIA RTX 2000 Ada Generation"]
 container_disk_gb = 40
 volume_gb = 20
 volume_mount_path = "/workspace"

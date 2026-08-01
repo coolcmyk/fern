@@ -78,7 +78,7 @@ RUNPOD_API_KEY=your-runpod-api-key
 
 ## Try Drone Sim
 
-The Drone Sim stack profile targets CPU compute and deploys one OCI image that
+The Drone Sim stack profile targets one GPU and deploys one OCI image that
 contains the PX4, Gazebo, XRCE-DDS, ROS 2, and headless QGroundControl processes
 represented by the upstream Compose stack. Runpod does not execute Docker
 Compose, so the image supervises those processes in one Pod and one network
@@ -105,6 +105,7 @@ confirm Pod creation. Prefer the immutable digest printed by the workflow:
 fern deploy --profile drone-sim-stack \
   --image ghcr.io/teapotlaboratories/drone-sim@sha256:<digest> \
   --yes
+  --gpu-id "NVIDIA RTX 2000 Ada Generation" \
 ```
 
 Run artifacts are written under `/workspace/runs/<run-id>/`. The Runpod path

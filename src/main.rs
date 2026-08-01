@@ -40,6 +40,10 @@ struct DeployArgs {
     #[arg(long)]
     registry_auth_id: Option<String>,
 
+    /// Runpod GPU type ID; defaults to the profile's current GPU.
+    #[arg(long)]
+    gpu_id: Option<String>,
+
     /// Smoke-test duration in seconds.
     #[arg(long, default_value_t = 300)]
     duration: u32,
@@ -146,9 +150,12 @@ async fn run(cli: Cli) -> Result<()> {
                 .registry_auth_id
                 .or_else(|| optional_env("RUNPOD_CONTAINER_REGISTRY_AUTH_ID"));
             let spec = match args.profile {
-                ProfileArg::DroneSimStack => {
-                    profile::drone_sim_stack(args.image, args.duration, registry_auth_id)
-                }
+                ProfileArg::DroneSimStack => profile::drone_sim_stack(
+                    args.image,
+                    args.duration,
+                    registry_auth_id,
+                    args.gpu_id,
+                ),
             };
 
             if args.dry_run {
