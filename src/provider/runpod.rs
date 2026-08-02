@@ -121,6 +121,8 @@ pub struct CreatePodRequest {
     pub gpu_count: Option<u32>,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub gpu_type_ids: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub gpu_type_priority: Option<String>,
 }
 
 impl From<DeploymentSpec> for CreatePodRequest {
@@ -139,6 +141,7 @@ impl From<DeploymentSpec> for CreatePodRequest {
             support_public_ip: true,
             vcpu_count: spec.vcpu_count,
             gpu_count: spec.gpu_count,
+            gpu_type_priority: (!spec.gpu_type_ids.is_empty()).then(|| "custom".into()),
             gpu_type_ids: spec.gpu_type_ids,
         }
     }
@@ -252,6 +255,36 @@ mod tests {
         assert_eq!(value["vcpuCount"], 8);
         assert!(value.get("gpuCount").is_none());
         assert!(value.get("gpuTypeIds").is_none());
+        assert!(value.get("gpuTypePriority").is_none());
+    }
+
+    #[test]
+    fn serializes_ordered_gpu_fallback() {
+        let request = CreatePodRequest::from(DeploymentSpec {
+            name: "fern-stack".into(),
+            image: "ghcr.io/example/drone-sim@sha256:123".into(),
+            container_registry_auth_id: None,
+            compute: ComputeKind::Gpu,
+            container_disk_gb: 40,
+            volume_gb: 20,
+            volume_mount_path: "/workspace".into(),
+            ports: vec![],
+            env: BTreeMap::new(),
+            cloud_type: "SECURE".into(),
+            vcpu_count: None,
+            gpu_count: Some(1),
+            gpu_type_ids: vec![
+                "NVIDIA RTX 2000 Ada Generation".into(),
+                "NVIDIA GeForce RTX 4090".into(),
+            ],
+        });
+
+        let value = serde_json::to_value(request).unwrap();
+        assert_eq!(value["gpuTypePriority"], "custom");
+        assert_eq!(
+            value["gpuTypeIds"],
+            serde_json::json!(["NVIDIA RTX 2000 Ada Generation", "NVIDIA GeForce RTX 4090"])
+        );
     }
 
     #[test]

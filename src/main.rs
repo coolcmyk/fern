@@ -40,7 +40,7 @@ struct DeployArgs {
     #[arg(long)]
     registry_auth_id: Option<String>,
 
-    /// Runpod GPU type ID; defaults to the profile's current GPU.
+    /// Require one exact Runpod GPU type instead of the profile's ordered fallback list.
     #[arg(long)]
     gpu_id: Option<String>,
 
