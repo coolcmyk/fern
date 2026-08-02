@@ -4,6 +4,14 @@ use crate::provider::{ComputeKind, DeploymentSpec};
 
 pub const DRONE_SIM_STACK_IMAGE: &str = "ghcr.io/teapotlaboratories/drone-sim:stack-main";
 pub const DRONE_SIM_GPU_TYPE_ID: &str = "NVIDIA RTX 2000 Ada Generation";
+pub const DRONE_SIM_GPU_FALLBACK_IDS: &[&str] = &[
+    "NVIDIA RTX 4000 Ada Generation",
+    "NVIDIA GeForce RTX 4090",
+    "NVIDIA L4",
+    "NVIDIA RTX 5000 Ada Generation",
+    "NVIDIA RTX 6000 Ada Generation",
+    "NVIDIA L40S",
+];
 
 pub fn drone_sim_stack(
     image: Option<String>,
@@ -11,6 +19,17 @@ pub fn drone_sim_stack(
     container_registry_auth_id: Option<String>,
     gpu_type_id: Option<String>,
 ) -> DeploymentSpec {
+    let gpu_type_ids = match gpu_type_id {
+        Some(gpu_type_id) => vec![gpu_type_id],
+        None => std::iter::once(DRONE_SIM_GPU_TYPE_ID.to_owned())
+            .chain(
+                DRONE_SIM_GPU_FALLBACK_IDS
+                    .iter()
+                    .map(|gpu_type_id| (*gpu_type_id).to_owned()),
+            )
+            .collect(),
+    };
+
     DeploymentSpec {
         name: "fern-drone-sim-stack".into(),
         image: image.unwrap_or_else(|| DRONE_SIM_STACK_IMAGE.into()),
@@ -29,7 +48,7 @@ pub fn drone_sim_stack(
         cloud_type: "SECURE".into(),
         vcpu_count: None,
         gpu_count: Some(1),
-        gpu_type_ids: vec![gpu_type_id.unwrap_or_else(|| DRONE_SIM_GPU_TYPE_ID.into())],
+        gpu_type_ids,
     }
 }
 
@@ -44,7 +63,8 @@ mod tests {
         assert_eq!(spec.compute, ComputeKind::Gpu);
         assert_eq!(spec.vcpu_count, None);
         assert_eq!(spec.gpu_count, Some(1));
-        assert_eq!(spec.gpu_type_ids, [DRONE_SIM_GPU_TYPE_ID]);
+        assert_eq!(spec.gpu_type_ids[0], DRONE_SIM_GPU_TYPE_ID);
+        assert_eq!(&spec.gpu_type_ids[1..], DRONE_SIM_GPU_FALLBACK_IDS);
         assert_eq!(spec.env["FASTDDS_BUILTIN_TRANSPORTS"], "UDPv4");
         assert_eq!(spec.env["DURATION"], "60");
         assert_eq!(spec.env["FERN_PROFILE"], "drone-sim-stack");

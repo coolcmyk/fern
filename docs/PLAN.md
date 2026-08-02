@@ -181,7 +181,15 @@ provider = "runpod"
 image = "ghcr.io/teapotlaboratories/drone-sim:stack-main"
 compute = "gpu"
 gpu_count = 1
-gpu_type_ids = ["NVIDIA RTX 2000 Ada Generation"]
+gpu_type_ids = [
+  "NVIDIA RTX 2000 Ada Generation",
+  "NVIDIA RTX 4000 Ada Generation",
+  "NVIDIA GeForce RTX 4090",
+  "NVIDIA L4",
+  "NVIDIA RTX 5000 Ada Generation",
+  "NVIDIA RTX 6000 Ada Generation",
+  "NVIDIA L40S",
+]
 container_disk_gb = 40
 volume_gb = 20
 volume_mount_path = "/workspace"
@@ -305,7 +313,7 @@ The command returns JSON by default and never prints the credential.
 - Add `start`, `stop`, and guarded `destroy`.
 - Record a local deployment index using atomic writes.
 - Add wait loops with deadlines and actionable provider errors.
-- Add ordered GPU type fallback for capacity errors.
+- [x] Add ordered GPU type fallback for capacity errors at Pod creation.
 
 Acceptance gate: create, stop, start, and destroy a minimal public test image;
 prove that interruption after create always reports and records the Pod ID.

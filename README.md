@@ -105,8 +105,19 @@ confirm Pod creation. Prefer the immutable digest printed by the workflow:
 fern deploy --profile drone-sim-stack \
   --image ghcr.io/teapotlaboratories/drone-sim@sha256:<digest> \
   --yes
-  --gpu-id "NVIDIA RTX 2000 Ada Generation" \
 ```
+
+By default, Fern asks Runpod to try an ordered, cost-conscious GPU list: RTX
+2000 Ada, RTX 4000 Ada, RTX 4090, L4, RTX 5000 Ada, RTX 6000 Ada, then L40S.
+Runpod selects the first available type in that order in one create request.
+Use `--gpu-id` only when the run requires one exact GPU and should fail rather
+than fall back.
+
+This fallback applies when creating a Pod. A stopped Pod remains tied to its
+original physical host, so a failed resume cannot safely switch GPU types in
+place. Preserve `/workspace` and use Runpod's Pod migration flow, or create a
+new Fern deployment after copying any required artifacts; Fern never silently
+replaces a stopped Pod and risks losing its volume.
 
 Run artifacts are written under `/workspace/runs/<run-id>/`. The Runpod path
 forces Fast DDS to UDP because Pods do not provide Docker's `--shm-size=2g`
